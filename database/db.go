@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	Todo *sqlx.DB
+	DB *sqlx.DB
 )
 
 type SSLMode string
@@ -26,22 +26,22 @@ const (
 // ConnectAndMigrate function connects with a given database and returns error if there is any error
 func ConnectAndMigrate(host, port, databaseName, user, password string, sslMode SSLMode) error {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", host, port, user, password, databaseName, sslMode)
-	DB, err := sqlx.Open("postgres", connStr)
+	db, err := sqlx.Open("postgres", connStr)
 
 	if err != nil {
 		return err
 	}
 
-	err = DB.Ping()
+	err = db.Ping()
 	if err != nil {
 		return err
 	}
-	Todo = DB
-	return migrateUp(DB)
+	DB = db
+	return migrateUp(db)
 }
 
 func ShutdownDatabase() error {
-	return Todo.Close()
+	return DB.Close()
 }
 
 // migrateUp function migrate the database and handles the migration logic
@@ -57,7 +57,7 @@ func migrateUp(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
 		return err
 	}
 	return nil
@@ -65,7 +65,7 @@ func migrateUp(db *sqlx.DB) error {
 
 // Tx provides the transaction wrapper
 func Tx(fn func(tx *sqlx.Tx) error) error {
-	tx, err := Todo.Beginx()
+	tx, err := DB.Beginx()
 	if err != nil {
 		return fmt.Errorf("failed to start a transaction: %+v", err)
 	}
