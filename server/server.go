@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
+	"hms/handlers"
 	"net/http"
 	"time"
 )
@@ -19,12 +20,13 @@ const (
 
 func SetUpRoutes() *Server {
 	r := gin.Default()
-	test := r.Group("/home")
-	test.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{
-			"response": "hello",
-		})
-	})
+	complainAPI := r.Group("/complain")
+	{
+		complainAPI.POST("", handlers.AddComplain)
+		complainAPI.PUT("/complainID", handlers.EditComplain)
+		complainAPI.DELETE("/complainID", handlers.DeleteComplain)
+		complainAPI.GET("", handlers.GetComplain)
+	}
 
 	return &Server{
 		Engine: r,
